@@ -1,0 +1,65 @@
+services:
+  # App backend service
+  app-server:
+    container_name: backend
+    # Configuration for building the docker image for the backend service
+    build:
+      context: backend # Use an image built from the specified dockerfile in the `spring-boot-oauth2-social-login` directory.
+      dockerfile: Dockerfile
+    ports:
+      - "8081:8089" # Forward the exposed port 8080 on the container to port 8080 on the host machine
+    restart: always
+    depends_on:
+      - db # This service depends on mysql. Start that first.
+    environment: # Pass environment variables to the service
+      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/gestion_conge?useSSL=false&serverTimezone=UTC&useLegacyDatetimeCode=false&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD:
+      DRIVER_TYpe: org.hibernate.dialect.MySQL8Dialect     
+    networks: # Networks to join (Services on the same network can communicate with each other using their name)
+      - backend
+#  Frontend Service 
+  app-client:
+    container_name: frontend
+    build:
+      context: frontend # Use an image built from the 
+      dockerfile: Dockerfile       
+    ports:
+      - "4201:80" # Map the exposed port 80 on the container to port 8081 
+# on the host machine
+    restart: always
+    depends_on:
+      - app-server
+    networks:
+      - backend  
+  # Database Service (Mysql)
+  db:
+    image: mysql:8.0
+    container_name: db
+
+
+    ports:
+      - "3306:3306"
+    restart: always
+    environment:
+      MYSQL_DATABASE: gestion_conge
+      MYSQL_ROOT_PASSWORD:
+    networks:
+      - backend  
+  
+  #add phpmyAdmin to show content of mysql    
+  phpmyadmin:
+    image: phpmyadmin
+    restart: always
+    ports:
+      - 8083:80
+    environment:
+      - PMA_ARBITRARY=1
+    networks:
+      - backend
+   
+# Networks to be created to facilitate communication between containers
+# to create a new ntework named backend
+networks:
+  backend:
+ 
